@@ -4,3 +4,18 @@
 @media(max-width:360px){.markets button{font-size:9px;padding:8px 4px}.markets small{font-size:8px}.chart{height:340px}.head small{font-size:8px}.panel h2{font-size:15px}}
 
 .ai-result{white-space:pre-wrap;overflow-wrap:anywhere;background:#091119;border:1px solid #355044;border-radius:9px;padding:12px;color:#dcebe4;font:11px/1.65 'DM Mono',monospace;margin-top:12px;max-height:520px;overflow:auto}.save:disabled{opacity:.45;cursor:not-allowed}
+
+
+/* Compact EDGE AI setup card */
+.ai-result{white-space:normal;overflow-wrap:anywhere;background:#091119;border:1px solid #355044;border-radius:11px;padding:12px;color:#dcebe4;font:12px/1.45 Manrope,Arial,sans-serif;margin-top:12px;max-height:none;overflow:visible}
+.result-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.verdict{font:800 19px 'DM Mono',monospace;letter-spacing:1px;padding:8px 13px;border-radius:8px;border:1px solid}
+.verdict.long{color:#8df0bd;background:#103325;border-color:#347b5a}.verdict.short{color:#ff9c9c;background:#391b21;border-color:#8d3d49}.verdict.neutral{color:#f0d28c;background:#302718;border-color:#75603a}
+.quality{font:9px 'DM Mono',monospace;color:#9eb0bd}
+.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.level{background:#121f29;border:1px solid #2b3c49;border-radius:8px;padding:10px;min-width:0}
+.level small,.result-section>small{display:block;font:9px 'DM Mono',monospace;color:#8fa5b5;letter-spacing:1px;margin-bottom:5px}
+.level b{display:block;font:700 16px 'DM Mono',monospace;color:#f2f7fa;overflow-wrap:anywhere}
+.level:first-child{border-color:#447b66;background:#10251f}.level:first-child b{color:#aaf0d0}
+.result-section{border-top:1px solid #293a46;margin-top:11px;padding-top:10px}
+.result-section ul{padding-left:17px;margin:5px 0 0}.result-section li{font-size:11px;margin:4px 0;color:#dce7ed}.result-section p{font-size:11px;color:#c2d0d9;margin:3px 0 9px}

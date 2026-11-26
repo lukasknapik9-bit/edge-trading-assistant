@@ -41,13 +41,43 @@ analyzeButton.addEventListener("click",async()=>{
   const mode=document.querySelector('.modes button.chosen')?.dataset.mode||"scalping";
   const timeframe=document.querySelector('.tfs button.chosen')?.textContent||"1m";
   const symbol=document.getElementById("symbol")?.textContent?.trim()||"Neznámý instrument";
-  const prompt=`Jsi konzervativní analytický asistent EDGE. Analyzuj POUZE přiložený screenshot grafu. Instrument: ${symbol}. Režim: ${mode}. Zvolený timeframe: ${timeframe}. Nehádej neviditelné ceny ani timeframe; pokud nejsou čitelné, řekni to. Nezaměňuj technický názor za jistou predikci. Nejprve popiš viditelnou strukturu (HH/HL/LH/LL), případné BOS/CHOCH, support/resistance, likviditu, FVG a price action, ale uváděj jen to, co screenshot skutečně podporuje. Poté dej výsledek v tomto formátu: VERDIKT: LONG / SHORT / NO TRADE; KVALITA: nízká / střední / vysoká; DŮVODY:; ENTRY: cena nebo nelze určit; SL: cena nebo nelze určit; TP1: cena nebo nelze určit; TP2: cena nebo nelze určit; R:R: vypočítej jen pokud jsou ceny spolehlivě čitelné; CO CHYBÍ:; INVALIDACE:; RIZIKO: Upozorni, pokud screenshot neposkytuje dost kontextu — v takovém případě zvol NO TRADE a nevymýšlej úrovně. Nejde o investiční doporučení. Neprováděj žádné obchody.`;
+  const prompt=`Jsi konzervativní tradingový analytik EDGE. Analyzuj pouze přiložený screenshot. Instrument: ${symbol}. Režim: ${mode}. Timeframe: ${timeframe}.
+Vrať POUZE validní JSON bez markdownu a bez textu před/za JSON. Buď velmi stručný. Nikdy nevymýšlej ceny. Pokud nejsou přesné úrovně jasně čitelné nebo chybí kontext, nastav verdict na NO TRADE a entry/sl/tp1/tp2/rr na "—".
+Použij přesně tuto strukturu:
+{
+ "verdict":"LONG | SHORT | NO TRADE",
+ "quality":"LOW | MEDIUM | HIGH",
+ "entry":"konkrétní cena/zóna nebo —",
+ "sl":"konkrétní cena nebo —",
+ "tp1":"konkrétní cena nebo —",
+ "tp2":"konkrétní cena nebo —",
+ "rr":"např. 1:2.0 nebo —",
+ "reasons":["max 3 krátké body, každý max 8 slov"],
+ "structure":"max 12 slov",
+ "trigger":"co musí nastat pro vstup, max 12 slov",
+ "invalidation":"co setup ruší, max 12 slov",
+ "risk":"jedna krátká věta"
+}
+LONG/SHORT použij pouze při jasném potvrzení. Jinak NO TRADE. Entry, SL, TP a R:R musí být logicky konzistentní se směrem obchodu. Ceny uváděj v cenové škále zobrazené na grafu. Pokud screenshot neukazuje dostatečný left context nebo čitelné ceny, zvol NO TRADE. Žádné dlouhé odstavce. Nejde o jistou predikci ani pokyn k obchodu; neprováděj obchody.`;
   try{
     const response=await puter.ai.chat(prompt,selectedChartImage);
     const content=response?.message?.content??response?.text??response;
-    aiResult.textContent=typeof content==="string"?content:JSON.stringify(content,null,2);
+    let raw=typeof content==="string"?content:JSON.stringify(content);
+    raw=raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/," ").trim();
+    let data;
+    try { data=JSON.parse(raw); } catch { data=null; }
+    const esc=v=>String(v??"—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    if(data && typeof data==="object"){
+      const verdict=String(data.verdict||"NO TRADE").toUpperCase();
+      const cls=verdict==="LONG"?"long":verdict==="SHORT"?"short":"neutral";
+      const levels=[["ENTRY",data.entry],["STOP LOSS",data.sl],["TAKE PROFIT 1",data.tp1],["TAKE PROFIT 2",data.tp2],["RISK / REWARD",data.rr]];
+      const reasons=Array.isArray(data.reasons)?data.reasons.slice(0,3):[];
+      aiResult.innerHTML=`<div class="result-top"><span class="verdict ${cls}">${esc(verdict)}</span><span class="quality">KVALITA: ${esc(data.quality||"—")}</span></div><div class="levels">${levels.map(([k,v])=>`<div class="level"><small>${k}</small><b>${esc(v)}</b></div>`).join("")}</div><div class="result-section"><small>DŮVODY</small><ul>${reasons.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>Bez potvrzených důvodů</li>"}</ul></div><div class="result-section"><small>STRUKTURA</small><p>${esc(data.structure)}</p><small>VSTUPNÍ PODMÍNKA</small><p>${esc(data.trigger)}</p><small>INVALIDACE</small><p>${esc(data.invalidation)}</p><small>RIZIKO</small><p>${esc(data.risk)}</p></div>`;
+    } else {
+      aiResult.textContent=raw||"AI nevrátila čitelný výsledek. Zkus analýzu znovu.";
+    }
     aiResult.hidden=false;
-    aiFeedback.textContent="Analýza dokončena. Zkontroluj úrovně přímo v grafu; AI může chybně číst ceny.";
+    aiFeedback.textContent="Hotovo. Úrovně vždy ověř přímo v grafu — AI může ceny přečíst chybně.";
     aiStatus.textContent="AI PŘIPOJENA";
   }catch(err){
     const message=err?.message||String(err);
